@@ -42,7 +42,7 @@ from typing import Literal
 
 GIT_COMMIT = True
 ROOT_PATH = "."
-
+MOVE_TARGETS = ["class", "function"]
 
 def shell_command(command: str):
     print(command)
@@ -56,8 +56,12 @@ def shell_command(command: str):
 
 # クラス名をスネークケースに変換する関数
 def to_snake_case(class_name: str) -> str:
-    s1 = re.sub("(.)([A-Z][a-z]+)", r"\1_\2", class_name)
-    return re.sub("([a-z0-9])([A-Z])", r"\1_\2", s1).lower()
+    try:
+        s1 = re.sub("(.)([A-Z][a-z]+)", r"\1_\2", class_name)
+        return re.sub("([a-z0-9])([A-Z])", r"\1_\2", s1).lower()
+    except Exception as e:
+        print(f"Error: parsing {class_name}. {e}")
+        raise
 
 
 @dataclass
@@ -70,16 +74,20 @@ class Block:
         self.codes = codes
         for code in codes:
             if code.startswith("class "):
-                class_pattern = re.compile(r"^class\s+([A-Z][a-zA-Z0-9]*)\s*[:\(]")
+                class_pattern = re.compile(r"^class\s+([a-zA-Z0-9_]*)\s*[:\(]")
                 match = class_pattern.match(code)
                 class_name = match and match.group(1)
+                if not class_name:
+                    raise Exception(f"ParseError: {code=} {match=}")
                 self.name = class_name
                 self.type = "class"
                 break
             elif code.startswith("def "):
-                def_pattern = re.compile(r"^def\s+([a-z][a-zA-Z0-9_]*)")  # \s*[:\(]')
+                def_pattern = re.compile(r"^def\s+([a-zA-Z0-9_]*)")  # \s*[:\(]')
                 match = def_pattern.match(code)
                 def_name = match and match.group(1)
+                if not def_name:
+                    raise Exception(f"ParseError: {code=} {match=}")
                 self.name = def_name
                 self.type = "function"
                 break
@@ -96,22 +104,17 @@ class Block:
             return f"{to_snake_case(self.name)}.py"
         return f"{self.name}.py"
 
-    def import_path(self, new_dir_path: Path):
-        new_dir_path = str(new_dir_path).replace(ROOT_PATH, "").replace("/", ".")
-        return f"from {new_dir_path}.{to_snake_case(self.name)} import {self.name}"
-
-
 class DjangoCodeSplitter:
 
     @classmethod
     def execute(cls, original_file_path: Path):
         blocks = DjangoCodeSplitter.load(file_path=original_file_path)
         # 1. 対象のファイルから、クラス定義・関数定義を1つずつ新規ファイルに切り出す
-        moved_blocks = DjangoCodeSplitter.move_blocks_to_new_files(blocks=blocks, original_file_path=original_file_path)
+        moved_blocks, non_moved_blocks = DjangoCodeSplitter.move_blocks_to_new_files(blocks=blocks, original_file_path=original_file_path)
         # 2. 残った対象のファイルを__init__.pyに移動
         init_file_path = DjangoCodeSplitter.move_original_file_to_init_file(original_file_path=original_file_path)
         # 3. 必要そうなインポート文を各ファイルの先頭に付加
-        DjangoCodeSplitter.attach_import_statements(moved_blocks=moved_blocks, init_file_path=init_file_path)
+        DjangoCodeSplitter.attach_import_statements(moved_blocks=moved_blocks, non_moved_blocks=non_moved_blocks, init_file_path=init_file_path)
 
     @classmethod
     def load(cls, file_path: Path) -> list[Block]:
@@ -150,7 +153,7 @@ class DjangoCodeSplitter:
         return blocks
 
     @classmethod
-    def move_blocks_to_new_files(cls, blocks: list[Block], original_file_path: Path) -> list[Block]:
+    def move_blocks_to_new_files(cls, blocks: list[Block], original_file_path: Path) -> tuple[list[Block], list[Block]]:
         # ファイルの移動先ディレクトリを作成
         new_dir_path = original_file_path.parent / original_file_path.stem
         assert not new_dir_path.is_dir(), f"Error: Directory '{new_dir_path}' already exists."
@@ -160,12 +163,14 @@ class DjangoCodeSplitter:
         new_dir_path.mkdir(parents=True, exist_ok=True)
 
         # 入力ファイルから1クラス(関数)ずつ個別の新規ファイルに移動
-        moved_blocks, other_blocks = [], []
+        moved_blocks, non_moved_blocks = [], []
+        # blocks = sorted(blocks, key=lambda block: block.name)
+        blocks = sorted(blocks, key=lambda block: block.type, reverse=True)
         while blocks:
             block = blocks.pop()
-            if block.type == "other":
+            if block.type not in MOVE_TARGETS:
                 # その他のブロックはそのまま残す
-                other_blocks.append(block)
+                non_moved_blocks.append(block)
                 continue
             # 移動先ファイルを作成
             with block.path(parent=new_dir_path).open(mode="w") as f:
@@ -182,7 +187,7 @@ class DjangoCodeSplitter:
                     f'git commit -m "[dcs] Move {block.type} {block.name} to {block.path(parent=new_dir_path)}."'
                 )
             moved_blocks.append(block)
-        return moved_blocks
+        return moved_blocks, non_moved_blocks
 
     @classmethod
     def move_original_file_to_init_file(cls, original_file_path: Path) -> Path:
@@ -197,21 +202,19 @@ class DjangoCodeSplitter:
         return init_file_path
 
     @classmethod
-    def attach_import_statements(cls, moved_blocks: list[Block], init_file_path: Path):
+    def attach_import_statements(cls, moved_blocks: list[Block], non_moved_blocks: list[Block], init_file_path: Path):
         # 各新規ファイルの先頭に追記する(不要なものはlinterで削除される想定)
-        with init_file_path.open(mode="r") as f:
-            init_file_codes = f.readlines()
         new_dir_path = init_file_path.parent
-        moved_blocks = sorted(moved_blocks, key=lambda block: block.name)
+        moved_blocks = sorted(moved_blocks, key=lambda block: (block.type, block.name))
         for moved_block in moved_blocks:
             with moved_block.path(parent=new_dir_path).open(mode="w") as f:
-                import_statement = cls.generate_import_statement_of_moved_blocks(
+                import_statement = cls.generate_import_statement_of_blocks(
                     new_dir_path=new_dir_path,
                     moved_blocks=moved_blocks,
-                    exclude_block=moved_block,
+                    non_moved_blocks=non_moved_blocks,
+                    exclude_block=moved_block, # このブロック自身は除外
                 )
                 f.writelines(import_statement)
-                f.writelines(init_file_codes)
                 f.writelines(moved_block.codes)
 
         # __init__.pyファイルにもインポート文を追加する
@@ -219,33 +222,41 @@ class DjangoCodeSplitter:
             init_file_path=init_file_path,
             moved_blocks=moved_blocks,
         )
-        shell_command(f"git add {init_file_path.parent}")
-        shell_command(f'git commit -m "[dcs] Attached import statements to the splitted files in {new_dir_path}."')
+        if GIT_COMMIT:
+            shell_command(f"git add {init_file_path.parent}")
+            shell_command(f'git commit -m "[dcs] Attached import statements to the splitted files in {new_dir_path}."')
 
     @classmethod
     def generate_init_file(cls, init_file_path: Path, moved_blocks: list[Block]) -> Path:
         # 新しい__init__.pyファイルを生成する
         with init_file_path.open(mode="r") as file:
             current_lines = file.readlines()
-        import_statement = cls.generate_import_statement_of_moved_blocks(
+        import_statement = cls.generate_import_statement_of_blocks(
             new_dir_path=init_file_path.parent, moved_blocks=moved_blocks
         )
         with init_file_path.open(mode="w") as file:
             file.writelines(import_statement)
             file.writelines(current_lines)
-            file.write(f'\n__all__ = [\n    "' + '",\n    "'.join([block.name for block in moved_blocks]) + '"\n]')
+            file.write('\n__all__ = [\n    "' + '",\n    "'.join([block.name for block in moved_blocks]) + '"\n]')
         return init_file_path
 
     @classmethod
-    def generate_import_statement_of_moved_blocks(
-        cls, new_dir_path: Path, moved_blocks: list[Block], exclude_block: Block = None
+    def generate_import_statement_of_blocks(
+        cls, new_dir_path: Path, moved_blocks: list[Block], non_moved_blocks: list[Block] = [], exclude_block: Block = None
     ) -> list[str]:
-        # 移動したブロックへのインポート文を生成
+        # 各ファイルの先頭に付けるインポート文を生成
+        new_dir_path = str(new_dir_path).replace(ROOT_PATH, "").replace("/", ".")
         import_statement = []
-        for block in moved_blocks:
-            if exclude_block and block.name == exclude_block.name:
+        for moved_block in moved_blocks:
+            if exclude_block and moved_block.name == exclude_block.name:
                 continue
-            import_statement.append(block.import_path(new_dir_path=new_dir_path) + "\n")
+            import_statement.append(f"from {new_dir_path}.{to_snake_case(moved_block.name)} import {moved_block.name}\n")
+        for non_moved_block in non_moved_blocks:
+            if non_moved_block.type == "other":
+                for code in non_moved_block.codes:
+                    import_statement.append(code)
+            else:
+                import_statement.append(f"from {new_dir_path} import {non_moved_block.name}\n")
         return import_statement
 
 

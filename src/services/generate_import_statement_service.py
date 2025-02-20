@@ -2,7 +2,6 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Optional
 
-from src.consts import ROOT_PATH
 from src.entities.block import Block
 from src.enums.block_type import BlockType
 from src.utils import to_snake_case
@@ -17,7 +16,7 @@ class GenerateImportStatementService:
 
     def execute(self) -> list[str]:
         # Generate import statements for moved and non-moved blocks
-        new_dir_path = str(self.new_dir_path).replace(ROOT_PATH, "").replace("/", ".")
+        new_dir_path = str(self.new_dir_path).replace("/", ".")
         import_statement = []
         # Add import statements from the original file
         for non_moved_block in filter(lambda block: block.type == BlockType.IMPORT, self.non_moved_blocks):

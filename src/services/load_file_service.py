@@ -5,7 +5,6 @@ from pathlib import Path
 from src.entities.block import Block
 from src.entities.file import File
 from src.enums.block_type import BlockType
-from src.patterns import CLASS_PATTERN, FUNCTION_PATTERN, IMPORT_PATTERN, VALUE_PATTERN
 
 
 @dataclass(frozen=True)
@@ -37,28 +36,22 @@ class LoadFileService:
                 ),
             ):
                 continue
-            blocks.append(self._generate_block(codes=lines[number : node.end_lineno]))
+            blocks.append(
+                Block(
+                    codes=lines[number : node.end_lineno],
+                    name=node.name if hasattr(node, "name") else "other",
+                    type=BlockType.ast2type(node),
+                )
+            )
             number = node.end_lineno
-        blocks.append(self._generate_block(codes=lines[number:]))
+        if number < len(lines):
+            blocks.append(
+                Block(
+                    codes=lines[number:],
+                    name="other",
+                    type=BlockType.OTHER,
+                )
+            )
         # Check if the total number of lines in the split blocks matches the original number of lines
         assert len(lines) == sum([len(block.codes) for block in blocks])
         return File(path=self.file_path, blocks=blocks)
-
-    def _generate_block(self, codes: list[str]) -> Block:
-        for pattern in [CLASS_PATTERN, FUNCTION_PATTERN, VALUE_PATTERN, IMPORT_PATTERN]:
-            for code in codes:
-                if match := pattern.pattern.match(code):
-                    name = match and match.groups()[-1]
-                    if not name:
-                        raise self.ParseError(f"{code=} {match=}")
-                    return Block(
-                        codes=codes,
-                        name=name,
-                        type=pattern.name,
-                    )
-        else:
-            return Block(
-                codes=codes,
-                name="other",
-                type=BlockType.OTHER,
-            )

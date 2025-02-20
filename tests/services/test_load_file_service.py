@@ -215,8 +215,7 @@ def test_load_file_service():
         name="function_with_async",
         codes=["\n", "\n", "async def function_with_async():\n", "    pass\n"],
     )
-    assert result.blocks[25] == Block(
-        type="value", name="other", codes=["\n", "\n", "last_value = 100\n"])
+    assert result.blocks[25] == Block(type="value", name="other", codes=["\n", "\n", "last_value = 100\n"])
 
 
 def test_load_file_service_non_existent_file():

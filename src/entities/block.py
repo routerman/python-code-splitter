@@ -5,7 +5,7 @@ from src.enums.block_type import BlockType
 from src.utils import to_snake_case
 
 
-@dataclass()
+@dataclass(frozen=True)
 class Block:
     type: BlockType
     name: str

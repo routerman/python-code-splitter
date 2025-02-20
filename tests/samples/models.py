@@ -131,3 +131,6 @@ def function_with_comment_and_decorator():
 
 async def function_with_async():
     pass
+
+
+last_value = 100

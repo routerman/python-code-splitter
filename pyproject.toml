@@ -7,7 +7,7 @@ packages = ["src/"]
 
 [project]
 name = "python-code-splitter"
-version = "0.0.10"
+version = "0.1.0"
 requires-python = ">=3.9"
 description = "split Python code by classes and functions"
 readme = "README.md"

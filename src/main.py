@@ -12,5 +12,6 @@ def main():
 
     CodeSplitter(original_file_path=Path(args.file_path), git_commit=args.git).execute()
 
+
 if __name__ == "__main__":
     main()

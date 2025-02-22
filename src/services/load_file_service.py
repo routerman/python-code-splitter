@@ -1,10 +1,23 @@
 import ast
+import re
 from dataclasses import dataclass
 from pathlib import Path
 
 from src.entities.block import Block
 from src.entities.file import File
 from src.enums.block_type import BlockType
+
+
+def ast2blocktype(node: ast.AST) -> str:
+    if isinstance(node, ast.Import) or isinstance(node, ast.ImportFrom):
+        return BlockType.IMPORT
+    if isinstance(node, ast.FunctionDef) or isinstance(node, ast.AsyncFunctionDef):
+        return BlockType.FUNCTION
+    if isinstance(node, ast.ClassDef):
+        return BlockType.CLASS
+    if isinstance(node, ast.Assign) or isinstance(node, ast.Constant):
+        return BlockType.VALUE
+    return BlockType.OTHER
 
 
 @dataclass(frozen=True)
@@ -33,14 +46,24 @@ class LoadFileService:
                     ast.Import,
                     ast.ImportFrom,
                     ast.Assign,
+                    ast.Constant,
                 ),
             ):
                 continue
+            if name := getattr(node, "name", None):
+                pass
+            elif isinstance(node, ast.Assign) or isinstance(node, ast.Constant):
+                pattern = re.compile(r"^([a-zA-Z_][a-zA-Z0-9_]*)\s*=")
+                for line in lines[number : node.end_lineno]:
+                    if match := pattern.match(line):
+                        name = match and match.groups()[0]
+            if name is None:
+                name = "other"
             blocks.append(
                 Block(
                     codes=lines[number : node.end_lineno],
-                    name=node.name if hasattr(node, "name") else "other",
-                    type=BlockType.ast2type(node),
+                    name=name,
+                    type=ast2blocktype(node=node),
                 )
             )
             number = node.end_lineno

@@ -27,10 +27,10 @@ def test_load_file_service():
         type="import", name="other", codes=["from typing import (\n", "    Callable\n", ")\n"]
     )
     assert result.blocks[3] == Block(type="import", name="other", codes=["from pathlib import Path\n"])
-    assert result.blocks[4] == Block(type="value", name="other", codes=["\n", "StrAlias = str\n"])
+    assert result.blocks[4] == Block(type="value", name="StrAlias", codes=["\n", "StrAlias = str\n"])
     assert result.blocks[5] == Block(
         type="value",
-        name="other",
+        name="FunctionAlias",
         codes=["# This is very important value\n", "FunctionAlias = Callable[[], None]\n"],
     )
     assert result.blocks[6] == Block(
@@ -110,8 +110,10 @@ def test_load_file_service():
             "    pass\n",
         ],
     )
-    assert result.blocks[13] == Block(type="value", name="other", codes=["\n", "\n", 'class_value1 = "default1"\n'])
-    assert result.blocks[14] == Block(type="value", name="other", codes=['class_value2 = "default2"\n'])
+    assert result.blocks[13] == Block(
+        type="value", name="class_value1", codes=["\n", "\n", 'class_value1 = "default1"\n']
+    )
+    assert result.blocks[14] == Block(type="value", name="class_value2", codes=['class_value2 = "default2"\n'])
     assert result.blocks[15] == Block(
         type="class",
         name="KlassWithMember",
@@ -197,7 +199,7 @@ def test_load_file_service():
         name="function_with_decorator",
         codes=["\n", "\n", "@staticmethod\n", "def function_with_decorator():\n", "    pass\n"],
     )
-    assert result.blocks[22] == Block(type="value", name="other", codes=["\n", "\n", "def_value = 1\n"])
+    assert result.blocks[22] == Block(type="value", name="def_value", codes=["\n", "\n", "def_value = 1\n"])
     assert result.blocks[23] == Block(
         type="function",
         name="function_with_comment_and_decorator",
@@ -215,7 +217,7 @@ def test_load_file_service():
         name="function_with_async",
         codes=["\n", "\n", "async def function_with_async():\n", "    pass\n"],
     )
-    assert result.blocks[25] == Block(type="value", name="other", codes=["\n", "\n", "last_value = 100\n"])
+    assert result.blocks[25] == Block(type="value", name="last_value", codes=["\n", "\n", "last_value = 100\n"])
 
 
 def test_load_file_service_non_existent_file():

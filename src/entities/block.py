@@ -1,5 +1,4 @@
 from dataclasses import dataclass
-from pathlib import Path
 
 from src.enums.block_type import BlockType
 from src.utils import to_snake_case
@@ -10,9 +9,6 @@ class Block:
     type: BlockType
     name: str
     codes: list[str]
-
-    def path(self, parent: Path) -> Path:
-        return parent / self.file_name
 
     @property
     def file_name(self):

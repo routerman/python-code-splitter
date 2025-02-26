@@ -5,12 +5,9 @@ from src.entities.block import Block
 from src.entities.file import File
 from src.enums.block_type import BlockType
 from src.services.attach_import_statements_service import AttachImportStatementsService
-from src.services.generate_init_file_service import UpdateInitFileService
-from src.services.generate_new_git_branch_name_service import (
-    GenerateNewGitBranchNameService,
-)
 from src.services.load_file_service import LoadFileService
-from src.services.move_blocks_service import MoveBlocksToNewFilesService
+from src.services.move_blocks_to_new_files_service import MoveBlocksToNewFilesService
+from src.services.update_init_file_service import UpdateInitFileService
 from src.utils import git
 
 
@@ -25,7 +22,7 @@ class CodeSplitter:
 
         # 2 Create new git branch
         if self.git_commit:
-            branch_name = GenerateNewGitBranchNameService(original_file_path=original_file.path).execute()
+            branch_name = "split/" + str(self.original_file_path).replace("/", "_").replace(".py", "")
             git(f"checkout -b {branch_name}")
 
         # 3. Move class and function definitions from the original file to new files one by one
@@ -35,7 +32,7 @@ class CodeSplitter:
                 git(f"add {new_file.path} {old_file.path}")
                 git(f'commit -m "[Auto] Move {block.type} {block.name} to {new_file.path}."')
 
-        result = MoveBlocksToNewFilesService(
+        original_file, moved_files = MoveBlocksToNewFilesService(
             original_file=original_file,
             target_block_types=[BlockType.CLASS, BlockType.FUNCTION],
             handler_for_each_move=git_commit_for_each_move,
@@ -47,22 +44,24 @@ class CodeSplitter:
         if self.git_commit:
             git(f"add {init_file_path}")
             git(f'commit -m "[Auto] git mv {original_file.path} {init_file_path}"')
+        init_file = File(path=init_file_path, blocks=original_file.blocks)
 
-        # 5. Add necessary import statements to the top of each file
+        # 5. Attach import statements for moved files to the __init__.py file
+        ## sort by block type and block name
+        moved_files = sorted(moved_files, key=lambda file: (file.blocks[0].type, file.blocks[0].name))
+        UpdateInitFileService(
+            init_file=init_file,
+            moved_files=moved_files,
+        ).execute()
+        if self.git_commit:
+            git(f"add {init_file.path}")
+            git(f'commit -m "[Auto] Attached import statements for moved files to {init_file.path}."')
+
+        # 6. Attache import statements to each file
         AttachImportStatementsService(
-            moved_files=result.new_files,
-            non_moved_blocks=result.old_file.blocks,
-            new_dir_path=init_file_path.parent,
+            moved_files=moved_files,
+            init_file=init_file,
         ).execute()
         if self.git_commit:
             git(f"add {init_file_path.parent}")
-            git(f'commit -m "[Auto] Attached import statements to the splitted files in {init_file_path.parent}."')
-
-        # 6. Add import statements to the __init__.py file
-        UpdateInitFileService(
-            init_file_path=init_file_path,
-            moved_files=result.new_files,
-        ).execute()
-        if self.git_commit:
-            git(f"add {init_file_path}")
-            git(f'commit -m "[Auto] Attached import statements to the splitted files in {init_file_path}."')
+            git(f'commit -m "[Auto] Attached import statements for the moved files to {init_file.path.parent}."')

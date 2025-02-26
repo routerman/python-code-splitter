@@ -7,7 +7,7 @@ packages = ["src/"]
 
 [project]
 name = "python-code-splitter"
-version = "0.1.2"
+version = "0.1.3"
 requires-python = ">=3.9"
 description = "split Python code by classes and functions"
 readme = "README.md"
@@ -19,9 +19,9 @@ dependencies = []
 
 [dependency-groups]
 dev = [
-    "autoflake8>=0.4.1",
+    "autoflake>=2.3.1",
     "build>=1.2.2.post1",
-    "isort>=6.0.0",
+    "isort>=6.0.1",
     "pytest>=8.3.4",
     "ruff>=0.9.7",
     "twine>=6.1.0",

@@ -1,13 +1,8 @@
 from dataclasses import dataclass
-from typing import Callable, NamedTuple, Optional
+from typing import Callable, Optional, Tuple
 
 from src.entities.file import File
 from src.enums.block_type import BlockType
-
-
-class Result(NamedTuple):
-    new_files: list[File]
-    old_file: File
 
 
 @dataclass
@@ -16,7 +11,7 @@ class MoveBlocksToNewFilesService:
     target_block_types: list[BlockType]
     handler_for_each_move: Optional[Callable] = None
 
-    def execute(self) -> Result:
+    def execute(self) -> Tuple[File, list[File]]:
         # Move each class (function) from the input file to individual new files
         # Create new Module Directory
         new_dir_path = self.original_file.path.parent / self.original_file.path.stem
@@ -39,4 +34,4 @@ class MoveBlocksToNewFilesService:
             old_file.write()
             if self.handler_for_each_move:
                 self.handler_for_each_move(new_file=new_file, old_file=old_file, block=block)
-        return Result(new_files=new_files, old_file=old_file)
+        return old_file, new_files

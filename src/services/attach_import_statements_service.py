@@ -1,7 +1,5 @@
 from dataclasses import dataclass
-from pathlib import Path
 
-from src.entities.block import Block
 from src.entities.file import File
 from src.services.generate_import_statement_service import (
     GenerateImportStatementService,
@@ -11,16 +9,13 @@ from src.services.generate_import_statement_service import (
 @dataclass(frozen=True)
 class AttachImportStatementsService:
     moved_files: list[File]
-    non_moved_blocks: list[Block]
-    new_dir_path: Path
+    init_file: File
 
     def execute(self):
-        moved_files = sorted(self.moved_files, key=lambda file: (file.blocks[0].type, file.blocks[0].name))
-        for moved_file in moved_files:
+        for moved_file in self.moved_files:
             import_statement = GenerateImportStatementService(
-                new_dir_path=self.new_dir_path,
-                moved_files=moved_files,
-                non_moved_blocks=self.non_moved_blocks,
+                moved_files=self.moved_files,
+                init_file=self.init_file,
                 exclude_file=moved_file,
             ).execute()
             text = moved_file.path.read_text()

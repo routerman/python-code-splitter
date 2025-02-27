@@ -1,0 +1,53 @@
+name: Release Workflow
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+    branches:
+      - main
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+
+    - name: Install dependencies
+      run: make install
+
+    - name: Update version in pyproject.toml
+      id: update_version
+      run: |
+        TAG_NAME=${GITHUB_REF#refs/tags/}
+        sed -i "s/^version = \".*\"/version = \"${TAG_NAME#v}\"/" pyproject.toml
+
+    - name: Commit version update
+      run: |
+        git config --global user.name "github-actions[bot]"
+        git config --global user.email "github-actions[bot]@users.noreply.github.com"
+        git add pyproject.toml
+        git commit -m "Update version to ${GITHUB_REF#refs/tags/}"
+        git push origin HEAD:${GITHUB_REF#refs/tags/}
+
+    - name: Build package
+      run: make build
+
+    - name: Upload to TestPyPI
+      run: make upload
+      env:
+        TWINE_USERNAME: ${{ secrets.TESTPYPI_USERNAME }}
+        TWINE_PASSWORD: ${{ secrets.TESTPYPI_PASSWORD }}
+
+    - name: Upload to PyPI
+      run: make prod-upload
+      env:
+        TWINE_USERNAME: ${{ secrets.PYPI_USERNAME }}
+        TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}

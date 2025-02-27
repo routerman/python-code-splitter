@@ -479,7 +479,7 @@ wheels = [
 
 [[package]]
 name = "python-code-splitter"
-version = "0.1.3"
+version = "0.1.9"
 source = { editable = "." }
 
 [package.dev-dependencies]

@@ -7,7 +7,7 @@ packages = ["src/"]
 
 [project]
 name = "python-code-splitter"
-version = "0.1.4"
+version = "0.1.9"
 requires-python = ">=3.9"
 description = "split Python code by classes and functions"
 readme = "README.md"
@@ -16,6 +16,9 @@ authors = [
     {name = "routerman"}
 ]
 dependencies = []
+
+[project.urls]
+GitHub = "https://github.com/routerman/python-code-splitter"
 
 [dependency-groups]
 dev = [

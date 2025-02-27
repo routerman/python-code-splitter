@@ -21,7 +21,9 @@ jobs:
         python-version: '3.11'
 
     - name: Install dependencies
-      run: make install
+      run: |
+        pip install uv
+        make install
 
     - name: Update version in pyproject.toml
       id: update_version

@@ -27,10 +27,10 @@ build: clean
 
 # NOTE: check ~/.pypirc is configured correctly
 upload:
-	twine upload --verbose --repository testpypi dist/*
+	uv run twine upload --verbose --repository testpypi dist/*
 
 prod-upload:
-	twine upload --verbose --repository pypi dist/*
+	uv run twine upload --verbose --repository pypi dist/*
 
 clean:
 	rm -rf dist

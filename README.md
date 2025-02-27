@@ -1,6 +1,6 @@
 # python-code-splitter
 
-A script to split Python code by classes and functions.
+A tool to split Python code by classes and functions.
 
 ## Install
 

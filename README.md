@@ -23,3 +23,9 @@ python-code-splitter path/to/file.py --git
 ```
 
 It automatically creates a git branch based on the target file path, and commits in review-friendly units.
+
+You can also use the `--targets` option to move only classes or functions.
+
+```sh
+python-code-splitter path/to/file.py --targets class
+```

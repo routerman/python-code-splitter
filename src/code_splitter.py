@@ -1,9 +1,9 @@
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Literal
 
 from src.entities.block import Block
 from src.entities.file import File
-from src.enums.block_type import BlockType
 from src.services.attach_import_statements_service import AttachImportStatementsService
 from src.services.load_file_service import LoadFileService
 from src.services.move_blocks_to_new_files_service import MoveBlocksToNewFilesService
@@ -15,6 +15,7 @@ from src.utils import git
 class CodeSplitter:
     original_file_path: Path
     git_commit: bool
+    target_block_types: Literal["class", "function"]
 
     def execute(self):
         # 1. Load the target file
@@ -34,7 +35,7 @@ class CodeSplitter:
 
         original_file, moved_files = MoveBlocksToNewFilesService(
             original_file=original_file,
-            target_block_types=[BlockType.CLASS, BlockType.FUNCTION],
+            target_block_types=self.target_block_types,
             handler_for_each_move=git_commit_for_each_move,
         ).execute()
 

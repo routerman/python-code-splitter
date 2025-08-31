@@ -22,7 +22,7 @@ class MoveBlocksToNewFilesService:
         blocks = self.original_file.blocks
         while blocks:
             block = blocks.pop()
-            if block.type not in self.target_block_types:
+            if block.type.value not in self.target_block_types:
                 skipped_blocks.append(block)
                 continue
             # Create the destination file

@@ -12,6 +12,6 @@ class Block:
 
     @property
     def file_name(self):
-        if self.type == "class":
+        if self.type == BlockType.CLASS:
             return f"{to_snake_case(self.name)}.py"
         return f"{self.name}.py"

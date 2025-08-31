@@ -8,7 +8,7 @@ from src.entities.file import File
 from src.enums.block_type import BlockType
 
 
-def ast2blocktype(node: ast.AST) -> str:
+def ast2blocktype(node: ast.AST) -> BlockType:
     if isinstance(node, ast.Import) or isinstance(node, ast.ImportFrom):
         return BlockType.IMPORT
     if isinstance(node, ast.FunctionDef) or isinstance(node, ast.AsyncFunctionDef):

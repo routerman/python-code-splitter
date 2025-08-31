@@ -8,7 +8,7 @@ from src.utils import to_snake_case
 class Block:
     type: BlockType
     name: str
-    codes: list[str]
+    lines: list[str]
 
     @property
     def file_name(self):

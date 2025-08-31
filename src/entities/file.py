@@ -12,4 +12,4 @@ class File:
     def write(self):
         with self.path.open(mode="w") as f:
             for block in self.blocks:
-                f.writelines(block.codes)
+                f.writelines(block.lines)

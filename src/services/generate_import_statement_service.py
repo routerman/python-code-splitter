@@ -18,7 +18,7 @@ class GenerateImportStatementService:
         import_statement = []
         # Add import statements from the original file
         for non_moved_block in filter(lambda block: block.type == BlockType.IMPORT, self.init_file.blocks):
-            import_statement += non_moved_block.codes
+            import_statement += non_moved_block.lines
         # Add import statements for moved blocks
         for moved_file in filter(lambda file: file != self.exclude_file, self.moved_files):
             for block in moved_file.blocks:

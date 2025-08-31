@@ -61,7 +61,7 @@ class LoadFileService:
                 name = "other"
             blocks.append(
                 Block(
-                    codes=lines[number : node.end_lineno],
+                    lines=lines[number : node.end_lineno],
                     name=name,
                     type=ast2blocktype(node=node),
                 )
@@ -70,11 +70,11 @@ class LoadFileService:
         if number < len(lines):
             blocks.append(
                 Block(
-                    codes=lines[number:],
+                    lines=lines[number:],
                     name="other",
                     type=BlockType.OTHER,
                 )
             )
         # Check if the total number of lines in the split blocks matches the original number of lines
-        assert len(lines) == sum([len(block.codes) for block in blocks])
+        assert len(lines) == sum([len(block.lines) for block in blocks])
         return File(path=self.file_path, blocks=blocks)

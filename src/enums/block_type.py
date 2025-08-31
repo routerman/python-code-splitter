@@ -1,4 +1,7 @@
-class BlockType:
+import enum
+
+
+class BlockType(enum.Enum):
     IMPORT = "import"
     FUNCTION = "function"
     CLASS = "class"

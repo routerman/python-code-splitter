@@ -4,6 +4,7 @@ from typing import Literal
 
 from src.entities.block import Block
 from src.entities.file import File
+from src.enums.block_type import BlockType
 from src.services.attach_import_statements_service import AttachImportStatementsService
 from src.services.load_file_service import LoadFileService
 from src.services.move_blocks_to_new_files_service import MoveBlocksToNewFilesService
@@ -15,7 +16,7 @@ from src.utils import git
 class CodeSplitter:
     original_file_path: Path
     git_commit: bool
-    target_block_types: Literal["class", "function"]
+    target_block_types: Literal[BlockType.CLASS, BlockType.FUNCTION]
 
     def execute(self):
         # 1. Load the target file
@@ -49,7 +50,7 @@ class CodeSplitter:
 
         # 5. Attach import statements for moved files to the __init__.py file
         ## sort by block type and block name
-        moved_files = sorted(moved_files, key=lambda file: (file.blocks[0].type, file.blocks[0].name))
+        moved_files = sorted(moved_files, key=lambda file: (file.blocks[0].type.value, file.blocks[0].name))
         UpdateInitFileService(
             init_file=init_file,
             moved_files=moved_files,

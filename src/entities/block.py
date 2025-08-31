@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 
-from src.enums.block_type import BlockType
+from src.types.block_type import BlockType
+from src.types.lines import Lines
 from src.utils import to_snake_case
 
 
@@ -8,7 +9,7 @@ from src.utils import to_snake_case
 class Block:
     type: BlockType
     name: str
-    lines: list[str]
+    lines: Lines
 
     @property
     def file_name(self):

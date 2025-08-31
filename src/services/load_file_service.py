@@ -5,7 +5,7 @@ from pathlib import Path
 
 from src.entities.block import Block
 from src.entities.file import File
-from src.enums.block_type import BlockType
+from src.types.block_type import BlockType
 
 
 def ast2blocktype(node: ast.AST) -> BlockType:

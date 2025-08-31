@@ -2,7 +2,8 @@ from dataclasses import dataclass
 from typing import Optional
 
 from src.entities.file import File
-from src.enums.block_type import BlockType
+from src.types.block_type import BlockType
+from src.types.lines import Lines
 from src.utils import to_snake_case
 
 
@@ -12,7 +13,7 @@ class GenerateImportStatementService:
     init_file: File
     exclude_file: Optional[File] = None
 
-    def execute(self) -> list[str]:
+    def execute(self) -> Lines:
         # Generate import statements for moved and non-moved blocks
         new_dir_path = str(self.init_file.path.parent).replace("/", ".")
         import_statement = []

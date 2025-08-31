@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from typing import Callable, Optional, Tuple
 
 from src.entities.file import File
-from src.enums.block_type import BlockType
+from src.types.block_type import BlockType
 
 
 @dataclass

@@ -3,8 +3,8 @@ from pathlib import Path
 import pytest
 
 from src.entities.block import Block
-from src.enums.block_type import BlockType
 from src.services.load_file_service import LoadFileService
+from src.types.block_type import BlockType
 
 
 def test_load_file_service():

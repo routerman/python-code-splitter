@@ -11,7 +11,7 @@ class AttachImportStatementsService:
     moved_files: list[File]
     init_file: File
 
-    def execute(self):
+    def execute(self) -> None:
         for moved_file in self.moved_files:
             import_statement = GenerateImportStatementService(
                 moved_files=self.moved_files,

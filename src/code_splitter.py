@@ -4,11 +4,11 @@ from typing import Literal
 
 from src.entities.block import Block
 from src.entities.file import File
-from src.enums.block_type import BlockType
 from src.services.attach_import_statements_service import AttachImportStatementsService
 from src.services.load_file_service import LoadFileService
 from src.services.move_blocks_to_new_files_service import MoveBlocksToNewFilesService
 from src.services.update_init_file_service import UpdateInitFileService
+from src.types.block_type import BlockType
 from src.utils import git
 
 

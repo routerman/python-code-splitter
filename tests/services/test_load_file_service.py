@@ -3,8 +3,8 @@ from pathlib import Path
 import pytest
 
 from src.entities.block import Block
-from src.enums.block_type import BlockType
 from src.services.load_file_service import LoadFileService
+from src.types.block_type import BlockType
 
 
 def test_load_file_service():
@@ -14,7 +14,7 @@ def test_load_file_service():
     assert result.blocks[0] == Block(
         type=BlockType.IMPORT,
         name="other",
-        codes=[
+        lines=[
             "# This is a sample file for testing.\n",
             '"""\n',
             "This is a sample file for testing.\n",
@@ -23,31 +23,31 @@ def test_load_file_service():
             "import sys\n",
         ],
     )
-    assert result.blocks[1] == Block(type=BlockType.IMPORT, name="other", codes=["from dataclasses import dataclass\n"])
+    assert result.blocks[1] == Block(type=BlockType.IMPORT, name="other", lines=["from dataclasses import dataclass\n"])
     assert result.blocks[2] == Block(
-        type=BlockType.IMPORT, name="other", codes=["from typing import (\n", "    Callable\n", ")\n"]
+        type=BlockType.IMPORT, name="other", lines=["from typing import (\n", "    Callable\n", ")\n"]
     )
-    assert result.blocks[3] == Block(type=BlockType.IMPORT, name="other", codes=["from pathlib import Path\n"])
-    assert result.blocks[4] == Block(type=BlockType.VALUE, name="StrAlias", codes=["\n", "StrAlias = str\n"])
+    assert result.blocks[3] == Block(type=BlockType.IMPORT, name="other", lines=["from pathlib import Path\n"])
+    assert result.blocks[4] == Block(type=BlockType.VALUE, name="StrAlias", lines=["\n", "StrAlias = str\n"])
     assert result.blocks[5] == Block(
         type=BlockType.VALUE,
         name="FunctionAlias",
-        codes=["# This is very important value\n", "FunctionAlias = Callable[[], None]\n"],
+        lines=["# This is very important value\n", "FunctionAlias = Callable[[], None]\n"],
     )
     assert result.blocks[6] == Block(
         type=BlockType.CLASS,
         name="KlassWithMetaKlass",
-        codes=["\n", "\n", "class KlassWithMetaKlass:\n", "    class Meta:\n", "        abstract = True\n"],
+        lines=["\n", "\n", "class KlassWithMetaKlass:\n", "    class Meta:\n", "        abstract = True\n"],
     )
     assert result.blocks[7] == Block(
         type=BlockType.CLASS,
         name="_KlassNameStartWithUnderScore",
-        codes=["\n", "\n", "class _KlassNameStartWithUnderScore:\n", "    pass\n"],
+        lines=["\n", "\n", "class _KlassNameStartWithUnderScore:\n", "    pass\n"],
     )
     assert result.blocks[8] == Block(
         type=BlockType.CLASS,
         name="KlassWithComment1",
-        codes=[
+        lines=[
             "\n",
             "\n",
             '"""\n',
@@ -62,7 +62,7 @@ def test_load_file_service():
     assert result.blocks[9] == Block(
         type=BlockType.CLASS,
         name="KlassWithComment2",
-        codes=[
+        lines=[
             "\n",
             "\n",
             "'''\n",
@@ -78,7 +78,7 @@ def test_load_file_service():
     assert result.blocks[10] == Block(
         type=BlockType.CLASS,
         name="KlassWithComment3",
-        codes=[
+        lines=[
             "\n",
             "\n",
             "# This is very important comment for KlassWithComment3\n",
@@ -90,12 +90,12 @@ def test_load_file_service():
     assert result.blocks[11] == Block(
         type=BlockType.CLASS,
         name="KlassWithDecorator",
-        codes=["\n", "\n", "@dataclass(frozen=True)\n", "class KlassWithDecorator:\n", "    pass\n"],
+        lines=["\n", "\n", "@dataclass(frozen=True)\n", "class KlassWithDecorator:\n", "    pass\n"],
     )
     assert result.blocks[12] == Block(
         type=BlockType.CLASS,
         name="KlassWithCommentAndDecorator",
-        codes=[
+        lines=[
             "\n",
             "\n",
             '"""\n',
@@ -112,13 +112,13 @@ def test_load_file_service():
         ],
     )
     assert result.blocks[13] == Block(
-        type=BlockType.VALUE, name="class_value1", codes=["\n", "\n", 'class_value1 = "default1"\n']
+        type=BlockType.VALUE, name="class_value1", lines=["\n", "\n", 'class_value1 = "default1"\n']
     )
-    assert result.blocks[14] == Block(type=BlockType.VALUE, name="class_value2", codes=['class_value2 = "default2"\n'])
+    assert result.blocks[14] == Block(type=BlockType.VALUE, name="class_value2", lines=['class_value2 = "default2"\n'])
     assert result.blocks[15] == Block(
         type=BlockType.CLASS,
         name="KlassWithMember",
-        codes=[
+        lines=[
             "\n",
             "\n",
             "class KlassWithMember:\n",
@@ -129,7 +129,7 @@ def test_load_file_service():
     assert result.blocks[16] == Block(
         type=BlockType.CLASS,
         name="KlassWithFunction",
-        codes=[
+        lines=[
             "\n",
             "\n",
             "class KlassWithFunction(KlassWithComment1):\n",
@@ -140,7 +140,7 @@ def test_load_file_service():
     assert result.blocks[17] == Block(
         type=BlockType.FUNCTION,
         name="_function_start_with_underscore",
-        codes=[
+        lines=[
             "\n",
             "\n",
             'if __name__ == "__main__":\n',
@@ -155,7 +155,7 @@ def test_load_file_service():
     assert result.blocks[18] == Block(
         type=BlockType.FUNCTION,
         name="function_with_comment1",
-        codes=[
+        lines=[
             "\n",
             "\n",
             '"""\n',
@@ -170,7 +170,7 @@ def test_load_file_service():
     assert result.blocks[19] == Block(
         type=BlockType.FUNCTION,
         name="function_with_comment2",
-        codes=[
+        lines=[
             "\n",
             "\n",
             "'''\n",
@@ -186,7 +186,7 @@ def test_load_file_service():
     assert result.blocks[20] == Block(
         type=BlockType.FUNCTION,
         name="function_with_comment3",
-        codes=[
+        lines=[
             "\n",
             "\n",
             "# This is very important comment for function_with_comment3\n",
@@ -198,13 +198,13 @@ def test_load_file_service():
     assert result.blocks[21] == Block(
         type=BlockType.FUNCTION,
         name="function_with_decorator",
-        codes=["\n", "\n", "@staticmethod\n", "def function_with_decorator():\n", "    pass\n"],
+        lines=["\n", "\n", "@staticmethod\n", "def function_with_decorator():\n", "    pass\n"],
     )
-    assert result.blocks[22] == Block(type=BlockType.VALUE, name="def_value", codes=["\n", "\n", "def_value = 1\n"])
+    assert result.blocks[22] == Block(type=BlockType.VALUE, name="def_value", lines=["\n", "\n", "def_value = 1\n"])
     assert result.blocks[23] == Block(
         type=BlockType.FUNCTION,
         name="function_with_comment_and_decorator",
-        codes=[
+        lines=[
             "\n",
             "\n",
             "# this comment for function_with_comment_and_decorator\n",
@@ -216,9 +216,9 @@ def test_load_file_service():
     assert result.blocks[24] == Block(
         type=BlockType.FUNCTION,
         name="function_with_async",
-        codes=["\n", "\n", "async def function_with_async():\n", "    pass\n"],
+        lines=["\n", "\n", "async def function_with_async():\n", "    pass\n"],
     )
-    assert result.blocks[25] == Block(type=BlockType.VALUE, name="last_value", codes=["\n", "\n", "last_value = 100\n"])
+    assert result.blocks[25] == Block(type=BlockType.VALUE, name="last_value", lines=["\n", "\n", "last_value = 100\n"])
 
 
 def test_load_file_service_non_existent_file():
